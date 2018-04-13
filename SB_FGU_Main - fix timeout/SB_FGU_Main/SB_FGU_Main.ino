@@ -5,18 +5,20 @@
 #include <FirebaseError.h>
 #include <FirebaseHttpClient.h>
 #include <FirebaseObject.h>
-#include <ESP.h>
 
 /**********************************/
+
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>
 #include <ESP8266WebServer.h>
 #include <WiFiManager.h>
+
 /**********************************/
 
 #include <time.h>
 
 /**********************************/
+
 void beep(int Delay);
 String Time_Stamp();
 void ConnectWiFi();
@@ -24,6 +26,7 @@ String Time_Stamps_Split_time();
 String Time_Stamps_Split_date();
 
 /*******************************************************************************************************************************************************************/
+
 int timezone = 7;
 const String DAY[7] =   {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 const String MONTH[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
@@ -40,6 +43,7 @@ char ntp_server3[20] = "time.uni.net.th";
 char ntp_server4[20] = "3.asia.pool.ntp.org";
 int dst = 0;
 int st = 0;
+
 /********************************************************************************************************************************************************************/
 
 /**comfig I2C Module**/
@@ -174,292 +178,294 @@ void setup() {
 }
 
 String getLastUser(void){
-    FirebaseObject Data  = Firebase.get("LogUser/Lasted");
-    String  Uid = Data.getString("/Uid");
+      FirebaseObject Data  = Firebase.get("LogUser/Lasted");
+      String  Uid = Data.getString("/Uid");
    return Uid;
 }
 
 int getStatus(void){
-    FirebaseObject Data  = Firebase.get("LogUser/Lasted");
-    int Status  = Data.getInt("/StatusDevice");
+      FirebaseObject Data  = Firebase.get("LogUser/Lasted");
+      int Status  = Data.getInt("/StatusDevice");
     return Status;
 }
 
 int getStatus_Repush(void){
-    FirebaseObject Value = Firebase.get("LogUser/CodeGen/Repush_state");
-    int Repush = Value.getInt("/Repush");
+      FirebaseObject Data = Firebase.get("LogUser/CodeGen/Repush_state");
+      int Repush = Data.getInt("/Repush");
     return Repush;
 } 
+int getAuthSuccess(void){
+      FirebaseObject Data = Firebase.get("/LogUser/CodeGen/AuthenCode");
+      int Auth_Success =  Data.getInt("/Status");
+    return Auth_Success;
+}
 
 void loop() {
+  
    String Uid = getLastUser();
    int Status = getStatus();
    int Repush =  getStatus_Repush();
+   int Auth_Success = getAuthSuccess();
+   
    if (STATE == 0) {
-    Serial.print("Status :");
-    Serial.print(Status);
-    Serial.print("   Repush :");
-    Serial.println(Repush);
-    if (Repush == 1) {
-          ST_Gencode = 2 ;
-    }
-    if (Status == 0) {   
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("   Welcome!!!   ");
-      lcd.setCursor(0, 1);
-      lcd.print(" Smart Bin FGU ");
-      delay(2000);
-      for (int i = 0; i < 3; i++) {
-        lcd.clear();
-        lcd.noDisplay();
-        delay(500);
-        lcd.setCursor(0, 0);
-        lcd.print("  Please LogIn! ");
-        lcd.setCursor(0, 1);
-        lcd.print("   On Webpage   ");
-        lcd.display();
-        delay(500);
-      }//end for
-      lcd.clear();
-      delay(1000);
-//      
-//                       lcd.setCursor(0, 0);
-//                       lcd.print(Time_Stamps_Split_date());
-//                       lcd.setCursor(0, 1);
-//                       lcd.print(Time_Stamps_Split_time());    
-
-    }//end if
-    else if (Status == 1) {
-      switch (ST_Gencode) {
-        case 1: {
-            do {
-              //lcd.clear();
-              randNumber = random(100000, 999999); // generate random number between 100000 & 999999 (minimum is inclusive, maximum is exclusive)
-              Serial.println(randNumber); // show the value in Serial Monitor
-              Firebase.setString("/LogUser/CodeGen/Uid", Uid);
-              Firebase.setInt("/LogUser/CodeGen/Code", randNumber);
-              if (Firebase.failed()) {
-                  Serial.print("Set Code failed");
-                  Serial.println(Firebase.error());
-                  prevRand = randNumber;
-                  return;
-              }
-              else {
+      Serial.print("Status :");
+      Serial.print(Status);
+      Serial.print("   Repush :");
+      Serial.print(Repush);
+      Serial.print("   Auth_Success  :");
+      Serial.println(Auth_Success);
+        if (Repush == 1) {
+              ST_Gencode = 2 ;
+        }
+              if (Status == 0) {   
                 lcd.clear();
-                  lcd.setCursor(0, 0);
-                  lcd.print("Gencode  Success");
-                  lcd.setCursor(0, 1);
-                  lcd.print("Code: ");
-                  lcd.setCursor(6, 1);
-                  lcd.print(randNumber);
-                  beep(200);
-                  delay(3000);
-              }
-              delay(1000);
-            } while (randNumber == prevRand);
-            prevRand = randNumber;
-            ST_Gencode = 0;
-            STATE = 1;
-            delay(1000);
-          } break;
-        case 2: {
-            lcd.clear();
-            lcd.noDisplay();
-            delay(500);
-            lcd.setCursor(0, 0);
-            lcd.print(">>>PUT BOTTLE<<<");
-            lcd.setCursor(0, 1);
-            lcd.print(">>>>>AGIAN!<<<<<");
-            lcd.display();
-            delay(500);
-            beep(600);
-            ST_Gencode = 0;
-            STATE = 1;
-            delay(1000);
-          } break;
-        default: {
-            lcd.noDisplay();
-            delay(500);
-            lcd.setCursor(0, 0);
-            lcd.print("  Press Button  ");
-            lcd.setCursor(0, 1);
-            lcd.print("   To  Gencode  ");
-            lcd.display();
-            delay(500);
-            beep(100);
-            beep(100);
-            lcd.clear();
-          } break;
-      }
-    }
-    //                 else if(Status == 2){
-    //                     STATE = 2;
-    //                 }
+                lcd.setCursor(0, 0);
+                lcd.print("   Welcome!!!   ");
+                lcd.setCursor(0, 1);
+                lcd.print(" Smart Bin FGU ");
+                delay(2000);
+                for (int i = 0; i < 3; i++) {
+                      lcd.clear();
+                      lcd.noDisplay();
+                      delay(500);
+                      lcd.setCursor(0, 0);
+                      lcd.print("  Please LogIn! ");
+                      lcd.setCursor(0, 1);
+                      lcd.print("   On Webpage   ");
+                      lcd.display();
+                      delay(500);
+                }//end for
+                lcd.clear();
+                delay(1000);       
+              }//end if
+              else if (Status == 1) {
+                switch (ST_Gencode) {
+                  case 1: {
+                            do {
+                              //lcd.clear();
+                              randNumber = random(100000, 999999); // generate random number between 100000 & 999999 (minimum is inclusive, maximum is exclusive)
+                              Serial.println(randNumber); // show the value in Serial Monitor
+                              Firebase.setString("/LogUser/CodeGen/Uid", Uid);
+                              Firebase.setInt("/LogUser/CodeGen/Code", randNumber);
+                              if (Firebase.failed()) {
+                                  Serial.print("Set Code failed");
+                                  Serial.println(Firebase.error());
+                                  prevRand = randNumber;
+                                  return;
+                              }
+                              else {
+                                  lcd.clear();
+                                  lcd.setCursor(0, 0);
+                                  lcd.print("Gencode  Success");
+                                  lcd.setCursor(0, 1);
+                                  lcd.print("Code: ");
+                                  lcd.setCursor(6, 1);
+                                  lcd.print(randNumber);
+                                  beep(200);
+                                  delay(3000);
+                                  }
+                              delay(1000);
+                          } while (randNumber == prevRand);
+                          prevRand = randNumber;
+                          ST_Gencode = 0;
+                          STATE = 1;
+                          delay(1000);
+                        } break;
+                  case 2: {
+                              lcd.clear();
+                              lcd.noDisplay();
+                              delay(500);
+                              lcd.setCursor(0, 0);
+                              lcd.print(">>>PUT BOTTLE<<<");
+                              lcd.setCursor(0, 1);
+                              lcd.print(">>>>>AGIAN!<<<<<");
+                              lcd.display();
+                              delay(500);
+                              beep(600);
+                              ST_Gencode = 0;
+                              STATE = 1;
+                              delay(1000);
+                        } break;
+                  default: {
+                              lcd.noDisplay();
+                              delay(500);
+                              lcd.setCursor(0, 0);
+                              lcd.print("  Press Button  ");
+                              lcd.setCursor(0, 1);
+                              lcd.print("   To  Gencode  ");
+                              lcd.display();
+                              delay(500);
+                              beep(100);
+                              beep(100);
+                              lcd.clear();
+                        } break;
+                }
+           }
+           else if(Status == 2){
+                 STATE = 2;
+           }
   }//End  STATE = 0
 
-  if (STATE == 1) {
-    int Auth_Success =  Firebase.getInt("/LogUser/CodeGen/AuthenCode/Status");
+  if (STATE == 1) {  
     if (Auth_Success == 1) {
-      if (StandBy_State == 0) {
-        Ready_ToPush();
-      }
-      else {
-        //Check state to Open
-        if ( CheckState_Open  == 1) {
-          beep(500);
-          myservo.write(90);
-          delay(500);
-          myservo.write(180);
-          delay(200);
-          CheckState_Open  = 0;
-        }
-        switch (CheckState_Bottle) {
-          case 1: {
-              Count++;
-              beep(200);
-              beep(200);
-              lcd.clear();
-              lcd.setCursor(0, 0);
-              lcd.print("Bottle Insert!!");
-              lcd.setCursor(0, 1);
-              lcd.print(">>>  ");
-              lcd.setCursor(5, 1);
-              lcd.print(Count);
-              lcd.setCursor(10, 1);
-              lcd.print("Bottles");
-              CheckState_Bottle = 0;
-              delay(500);
-            } break;
-          default:
-            break;
-        }
-        /******************************** Check Time Out  Without push bottles  30 seconds  ************************************/
-        if (State_checktime == 0) {
-          Count_time++;
-          Serial.print("Count :  ");
-          Serial.println(Count_time);
-          if (Count_time  >= Deadline ) {
-//            Insert_Data();
-         Firebase.setInt("/LogUser/CodeGen/AuthenCode/Status" , 0);
-         Firebase.setInt("/LogUser/CodeGen/Repush_state/Repush" , 0);
-         Firebase.setInt("LogUser/Lasted/StatusDevice" , 0);
-          Count = 0;
-            beep(500);
-            Auto_ToPush();
-            lcd.clear();
-            delay(1000);
-            for (int i = 0; i < 3 ; i++) {
-              lcd.noDisplay();
-              delay(500);
-              lcd.setCursor(0, 0);
-              lcd.print("    SUCCESS!    ");
-              lcd.setCursor(0, 1);
-              lcd.print(" See You Agian! ");
-              lcd.display();
-              delay(500);
+            if (StandBy_State == 0) {
+              Ready_ToPush();
             }
-            beep(100);
-            beep(100);
-            beep(100);
-            lcd.clear();
-            STATE = 0;
-            StandBy_State = 0;
-            Count_time = 0;
-            delay(2000);
-          }
-
-          delay(1000);
-        }
-        /**********************************  End  Check Time Out  Without push bottles  30 seconds  ************************************/
-
-        /******************************************  Check Time Out  push bottles 60 seconds  ******************************************/
-        if (State_checktime == 1) {
-          Count_time++;
-            if (Mark_time == 1) {
-                Reset_Time = 0;
-                Mark_time = 0;
-                Count_time = 0;
-            }
-          Serial.print("Count :  ");
-          Serial.println(Count_time);
-
-          if (Count_time  >= Deadline1 ) {
-            Insert_Data();
-            beep(500);
-            Auto_ToPush();
-            lcd.clear();
-            delay(1000);
-            for (int i = 0; i < 3 ; i++) {
-              lcd.noDisplay();
-              delay(500);
-              lcd.setCursor(0, 0);
-              lcd.print("    SUCCESS!    ");
-              lcd.setCursor(0, 1);
-              lcd.print(" See You Agian! ");
-              lcd.display();
-              delay(500);
-            }
-            beep(100);
-            beep(100);
-            beep(100);
-            lcd.clear();
-            STATE = 0;
-            Count_time = 0;
-            StandBy_State = 0;
-            State_checktime  = 0;
-            delay(2000);
-          }
-          delay(1000);
-        }
-        /****************************************** End Check Time Out  push bottles 60 seconds  ******************************************/
-        if (ST_Gencode) {
-          Insert_Data();
-          beep(500);
-          for (int i = 0; i < 3 ; i++) {
-            lcd.noDisplay();
-            delay(500);
-            lcd.setCursor(0, 0);
-            lcd.print("    SUCCESS!    ");
-            lcd.setCursor(0, 1);
-            lcd.print(" See You Agian! ");
-            lcd.display();
-            delay(500);
-          }
-          beep(100);
-          beep(100);
-          beep(100);
-          lcd.clear();
-          STATE = 0;
-          StandBy_State = 0;
-          delay(2000);
-        }//End if ButtonState
-      delay(1000);}//End else
+            else{
+                 //Check state to Open
+                 if( CheckState_Open  == 1) {
+                 beep(500);
+                 myservo.write(90);
+                 delay(500);
+                 myservo.write(180);
+                 delay(200);
+                 CheckState_Open  = 0;
+              }
+              switch (CheckState_Bottle) {
+                case 1: {
+                    Count++;
+                    beep(200);
+                    beep(200);
+                    lcd.clear();
+                    lcd.setCursor(0, 0);
+                    lcd.print("Bottle Insert!!");
+                    lcd.setCursor(0, 1);
+                    lcd.print(">>>  ");
+                    lcd.setCursor(5, 1);
+                    lcd.print(Count);
+                    lcd.setCursor(10, 1);
+                    lcd.print("Bottles");
+                    CheckState_Bottle = 0;
+                    delay(500);
+                  } break;
+                default:
+                  break;
+              }
+              /******************************** Check Time Out  Without push bottles  30 seconds  ************************************/
+              if (State_checktime == 0) {
+                Count_time++;
+                Serial.print("Count :  ");
+                Serial.println(Count_time);
+                      if (Count_time  >= Deadline ) {
+            //            Insert_Data();
+                          Firebase.setInt("/LogUser/CodeGen/AuthenCode/Status" , 0);
+                          Firebase.setInt("/LogUser/CodeGen/Repush_state/Repush" , 0);
+                          Firebase.setInt("LogUser/Lasted/StatusDevice" , 0);
+                          Count = 0;
+                          beep(500);
+                          Auto_ToPush();
+                          lcd.clear();
+                          delay(1000);
+                          for (int i = 0; i < 3 ; i++) {
+                                lcd.noDisplay();
+                                delay(500);
+                                lcd.setCursor(0, 0);
+                                lcd.print("    SUCCESS!    ");
+                                lcd.setCursor(0, 1);
+                                lcd.print(" See You Agian! ");
+                                lcd.display();
+                                delay(500);
+                          }
+                          beep(100);
+                          beep(100);
+                          beep(100);
+                          lcd.clear();
+                          STATE = 0;
+                          StandBy_State = 0;
+                          Count_time = 0;
+                          delay(2000);
+                      }
+                delay(500);
+              }
+              /**********************************  End  Check Time Out  Without push bottles  30 seconds  ************************************/
+      
+              /******************************************  Check Time Out  push bottles 60 seconds  ******************************************/
+              if (State_checktime == 1) {
+                       Count_time++;
+                       if (Mark_time == 1) {
+                               Reset_Time = 0;
+                               Mark_time = 0;
+                               Count_time = 0;
+                       }
+                       Serial.print("Count :  ");
+                       Serial.println(Count_time);
+      
+                      if (Count_time  >= Deadline1 ) {
+                                Insert_Data();
+                                beep(500);
+                                Auto_ToPush();
+                                lcd.clear();
+                                delay(1000);
+                                for (int i = 0; i < 3 ; i++) {
+                                      lcd.noDisplay();
+                                      delay(500);
+                                      lcd.setCursor(0, 0);
+                                      lcd.print("    SUCCESS!    ");
+                                      lcd.setCursor(0, 1);
+                                      lcd.print(" See You Agian! ");
+                                      lcd.display();
+                                      delay(500);
+                                }
+                                beep(100);
+                                beep(100);
+                                beep(100);
+                                lcd.clear();
+                                STATE = 0;
+                                Count_time = 0;
+                                StandBy_State = 0;
+                                State_checktime  = 0;
+                                delay(2000);
+                      }
+                 delay(1000);
+              }
+              /****************************************** End Check Time Out  push bottles 60 seconds  ******************************************/
+              
+              if (ST_Gencode) {
+                    Insert_Data();
+                    beep(500);
+                    for (int i = 0; i < 3 ; i++) {
+                          lcd.noDisplay();
+                          delay(500);
+                          lcd.setCursor(0, 0);
+                          lcd.print("    SUCCESS!    ");
+                          lcd.setCursor(0, 1);
+                          lcd.print(" See You Agian! ");
+                          lcd.display();
+                          delay(500);
+                    }
+                    beep(100);
+                    beep(100);
+                    beep(100);
+                    lcd.clear();
+                    STATE = 0;
+                    StandBy_State = 0;
+                    delay(1000);
+             }//End if ButtonState
+           delay(1000);
+          }//End else
     }//End if Auth_Success
   }//End STATE = 1
-
-  //      if(STATE == 2){
-  //              lcd.clear();
-  //              lcd.noDisplay();
-  //              delay(500);
-  //                 lcd.setCursor(0, 0);
-  //                 lcd.print("  Attention!!!  ");
-  //                 lcd.setCursor(0, 1);
-  //                 lcd.print(" Smart Bin FGU  ");
-  //              lcd.noDisplay();
-  //              delay(500);
-  //                  lcd.setCursor(0, 0);
-  //                  lcd.print(" Out Of Service ");
-  //                  lcd.setCursor(0, 1);
-  //                  lcd.print(Time_Stamps_Split());
-  //             lcd.display();
-  //             delay(500);
-  //             lcd.clear();
-  //      }
+  if(STATE == 2) {
+              if(Status == 0){
+                   STATE = 0;  
+                   beep(500);
+                   beep(100);
+                   beep(100);
+                }
+               lcd.clear();
+               lcd.setCursor(0, 0);
+               lcd.print(" Out Of Service ");  
+               lcd.setCursor(0, 1);
+               lcd.print(Time_Stamps_Split_date());
+               lcd.setCursor(8, 1);
+               lcd.print(Time_Stamps_Split_time());   
+              
+    }
 
 }
 
 void Insert_Data(void) {
+  
   String Time =  Time_Stamp();
   FirebaseObject Data = Firebase.get("LogUser/Lasted");
   String UID = Data.getString("/Uid");
@@ -475,119 +481,123 @@ void Insert_Data(void) {
   valueObject["SBNumber"] = Bin_ID;
   valueObject["Logbottle"] = Count;
   valueObject["Logtime"] = Time;
-
+  //Push Data to Firebase Realtime Database
   Firebase.push("History", valueObject);
 
   if (Firebase.failed()) {
-    Serial.print("Set" + UID + "FAILED");
-    Serial.println(Firebase.error());
-    return ;
+      Serial.print("Set" + UID + "FAILED");
+      Serial.println(Firebase.error());
+      return ;
   }
   delay(1000);
   Firebase.setInt("/LogUser/CodeGen/AuthenCode/Status" , 0);
   Firebase.setInt("/LogUser/CodeGen/Repush_state/Repush" , 0);
   Firebase.setInt("LogUser/Lasted/StatusDevice" , 0);
   Count = 0;
+  
 }
 
 void Ready_ToPush() {
+  
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Ready to Insert!");
   for (int i = 0; i < 2 ; i++) {
-    lcd.noDisplay();
-    delay(300);
-    lcd.setCursor(0, 1);
-    lcd.print("V              V");
-    lcd.display();
-    delay(300);
-    lcd.noDisplay();
-    delay(300);
-    lcd.setCursor(0, 1);
-    lcd.print("  V         V   ");
-    lcd.display();
-    delay(300);
-    lcd.noDisplay();
-    delay(300);
-    lcd.setCursor(0, 1);
-    lcd.print("    V      V    ");
-    lcd.display();
-    delay(300);
-    lcd.noDisplay();
-    delay(300);
-    lcd.setCursor(0, 1);
-    lcd.print("       VV       ");
-    lcd.display();
-    delay(300);
-
+        lcd.noDisplay();
+        delay(300);
+        lcd.setCursor(0, 1);
+        lcd.print("V              V");
+        lcd.display();
+        delay(300);
+        lcd.noDisplay();
+        delay(300);
+        lcd.setCursor(0, 1);
+        lcd.print("  V         V   ");
+        lcd.display();
+        delay(300);
+        lcd.noDisplay();
+        delay(300);
+        lcd.setCursor(0, 1);
+        lcd.print("    V      V    ");
+        lcd.display();
+        delay(300);
+        lcd.noDisplay();
+        delay(300);
+        lcd.setCursor(0, 1);
+        lcd.print("       VV       ");
+        lcd.display();
+        delay(300);
   }
   lcd.setCursor(0, 1);
   lcd.print(" Put The Bottle ");
   beep(500);
   StandBy_State = 1;
+  
 }
 
 void Auto_ToPush() {
+  
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("  Auto Confirm  ");
   lcd.noDisplay();
   delay(200);
-  lcd.setCursor(0, 1);
-  lcd.print(">>              ");
+      lcd.setCursor(0, 1);
+      lcd.print(">>              ");
+      lcd.display();
+      delay(200);
+      lcd.noDisplay();
+      delay(200);
+      lcd.setCursor(0, 1);
+      lcd.print("  >>            ");
+      lcd.display();
+      delay(200);
+      lcd.noDisplay();
+      delay(200);
+      lcd.setCursor(0, 1);
+      lcd.print("    >>          ");
+      lcd.display();
+      delay(200);
+      lcd.noDisplay();
+      delay(200);
+      lcd.setCursor(0, 1);
+      lcd.print("      >>        ");
+      lcd.display();
+      delay(200);
+      lcd.noDisplay();
+      delay(200);
+      lcd.setCursor(0, 1);
+      lcd.print("        >>      ");
+      lcd.display();
+      delay(200);
+      lcd.noDisplay();
+      delay(200);
+      lcd.setCursor(0, 1);
+      lcd.print("          >>    ");
+      lcd.display();
+      delay(200);
+      lcd.noDisplay();
+      delay(200);
+      lcd.setCursor(0, 1);
+      lcd.print("            >>  ");
+      lcd.display();
+      delay(200);
+      lcd.noDisplay();
+      delay(300);
+      lcd.setCursor(0, 1);
+      lcd.print("              >>");
   lcd.display();
   delay(200);
-  lcd.noDisplay();
-  delay(200);
-  lcd.setCursor(0, 1);
-  lcd.print("  >>            ");
-  lcd.display();
-  delay(200);
-  lcd.noDisplay();
-  delay(200);
-  lcd.setCursor(0, 1);
-  lcd.print("    >>          ");
-  lcd.display();
-  delay(200);
-  lcd.noDisplay();
-  delay(200);
-  lcd.setCursor(0, 1);
-  lcd.print("      >>        ");
-  lcd.display();
-  delay(200);
-  lcd.noDisplay();
-  delay(200);
-  lcd.setCursor(0, 1);
-  lcd.print("        >>      ");
-  lcd.display();
-  delay(200);
-  lcd.noDisplay();
-  delay(200);
-  lcd.setCursor(0, 1);
-  lcd.print("          >>    ");
-  lcd.display();
-  delay(200);
-  lcd.noDisplay();
-  delay(200);
-  lcd.setCursor(0, 1);
-  lcd.print("            >>  ");
-  lcd.display();
-  delay(200);
-  lcd.noDisplay();
-  delay(300);
-  lcd.setCursor(0, 1);
-  lcd.print("              >>");
-  lcd.display();
-  delay(200);
+  
 }
 
 void beep(int Delay) {
-
+  
   digitalWrite(Buzzer , HIGH);
   delay(Delay);
   digitalWrite(Buzzer , LOW);
   delay(Delay);
-
+  
 }
 
 void ConnectWiFi() {
@@ -612,34 +622,38 @@ void ConnectWiFi() {
 }
 
 String Time_Stamp() {
+  
   time_t now = time(nullptr);
   struct tm* newtime = localtime(&now);
 
   String tmpNow = "";
-  tmpNow += String(DAY[newtime->tm_wday]) + " " +  String(newtime->tm_mday) + " " + String(MONTH[newtime->tm_mon]) + " " + String(newtime->tm_year + 1900);
-  tmpNow += "  ";
-  tmpNow += String(HOUR[newtime->tm_hour]) + ":" +  String(MIN[newtime->tm_min]) + ":" + String(SEC[newtime->tm_sec]);
+    tmpNow += String(DAY[newtime->tm_wday]) + " " +  String(newtime->tm_mday) + " " + String(MONTH[newtime->tm_mon]) + " " + String(newtime->tm_year + 1900);
+    tmpNow += "  ";
+    tmpNow += String(HOUR[newtime->tm_hour]) + ":" +  String(MIN[newtime->tm_min]) + ":" + String(SEC[newtime->tm_sec]);
   return tmpNow;
+  
 }
 
 String Time_Stamps_Split_time() {
+  
   time_t now = time(nullptr);
   struct tm* newtime = localtime(&now);
 
-  String tmpNow = "    ";
-  tmpNow += String(HOUR[newtime->tm_hour]) + ":" +  String(MIN[newtime->tm_min]) + ":" + String(SEC[newtime->tm_sec]);
-  tmpNow += "    ";
+  String tmpNow = "";
+    tmpNow += String(HOUR[newtime->tm_hour]) + ":" +  String(MIN[newtime->tm_min]) + ":" + String(SEC[newtime->tm_sec]);
+    tmpNow += "";
   return tmpNow;
+  
 }
 
 String Time_Stamps_Split_date() {
+  
   time_t now = time(nullptr);
   struct tm* newtime = localtime(&now);
 
-  String tmpNow = "    ";
-  tmpNow += String(newtime->tm_mday) + "/" + String(newtime->tm_mon + 1) + "/" + String((newtime->tm_year + 1900) % 2000);
-  tmpNow += "    ";
+  String tmpNow = "";
+    tmpNow += String(newtime->tm_mday) + "/" + String(newtime->tm_mon + 1) + "/" + String((newtime->tm_year + 1900) % 2000);
+    tmpNow += "";
   return tmpNow;
+  
 }
-
-
