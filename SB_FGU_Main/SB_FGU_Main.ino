@@ -48,7 +48,6 @@ char ntp_server3[20] = "time.uni.net.th";
 char ntp_server4[20] = "3.asia.pool.ntp.org";
 int dst = 0;
 int st = 0;
-
 /********************************************************************************************************************************************************************/
 
 /**comfig I2C Module**/
@@ -94,7 +93,7 @@ int State_checktime = 0;
 int Count_state = 0;
 
 int Deadline = 20;
-int Deadline1 = 40;
+int Deadline1 = 30;
 /*********************/
 
 //Defined Input-Output Devices//
@@ -121,11 +120,11 @@ void Count_Bot() {
 void Check_Bot() {
   CheckState_Open  = 1;        
 }
-//
-///*Check state */
-//void Gen_Code() {
-//  ST_Gencode = 1;
-//}
+
+/*Check state */
+void Gen_Code() {
+  ST_Gencode = 1;
+}
 
 void setup() {
   Serial.begin(115200);
@@ -178,7 +177,7 @@ void setup() {
   /*Setup Interupt Functions*/
   attachInterrupt(digitalPinToInterrupt(IF_1),  Check_Bot, CHANGE);
   attachInterrupt(digitalPinToInterrupt(IF_2),  Count_Bot, CHANGE);
-//  attachInterrupt(digitalPinToInterrupt(Bt_Pin), Gen_Code , HIGH);
+  attachInterrupt(digitalPinToInterrupt(Bt_Pin), Gen_Code , HIGH);
 
   // Firebase Connect database
   Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
@@ -207,13 +206,23 @@ int getAuthSuccess(void){
     return Auth_Success;
 }
 
+int getStatusrange(void){
+      FirebaseObject Data = Firebase.get("/LogUser/Ultrasonic");
+      int Range =  Data.getInt("/Distance");
+      if(Range <= 3){
+         return true;
+      }
+      else
+         return false;    
+}
+
 void loop() {
   
    String Uid = getLastUser();
    int Status = getStatus();
    int Repush =  getStatus_Repush();
    int Auth_Success = getAuthSuccess();
-   
+   int Range_Status = getStatusrange();
    if (STATE == 0) {
       Serial.print("Status :");
       Serial.print(Status);
@@ -223,6 +232,9 @@ void loop() {
       Serial.println(Auth_Success);
         if (Repush == 1) {
               ST_Gencode = 2 ;
+        }
+        if(Range_Status == true){
+              Status = 2;
         }
               if (Status == 0) {   
                 lcd.clear();
@@ -246,7 +258,7 @@ void loop() {
                 delay(1000);       
               }//end if
               else if (Status == 1) {
-                int ST_Gencode = digitalRead(Bt_Pin);
+//                int ST_Gencode = digitalRead(Bt_Pin);
                 switch (ST_Gencode) {
                   case 1: {
                             do {
@@ -289,7 +301,7 @@ void loop() {
                               lcd.print(">>>>>AGIAN!<<<<<");
                               lcd.display();
                               delay(500);
-                              beep(600);
+                              beep(500);
                               ST_Gencode = 0;
                               STATE = 1;
                               delay(1000);
@@ -303,8 +315,8 @@ void loop() {
                               lcd.print("   To  Gencode  ");
                               lcd.display();
                               delay(500);
-                              beep(100);
-                              beep(100);
+                              beep(200);
+                              beep(200);
                               lcd.clear();
                         } break;
                 }
@@ -356,7 +368,7 @@ void loop() {
                   break;
               }
               
-              /******************************** Check Time Out  Without push bottles  30 seconds  ************************************/
+              /******************************** Check Time Out  Without push bottles  20 seconds  ************************************/
               if (State_checktime == 0) {
                 Count_time++;
                 Serial.print("Count :  ");
@@ -396,14 +408,14 @@ void loop() {
                 lcd.print(Count_time);
                 delay(500);
               }
-              /**********************************  End  Check Time Out  Without push bottles  30 seconds  ************************************/
-              /******************************************  Check Time Out  push bottles 60 seconds  ******************************************/
+              /**********************************  End  Check Time Out  Without push bottles  20 seconds  ************************************/
+              /******************************************  Check Time Out  push bottles 30 seconds  ******************************************/
               if (State_checktime == 1) {
                        Count_time++;
                        if (Mark_time == 1) {
                                Reset_Time = 0;
                                Mark_time = 0;
-                               Count_time = 0;
+                               Count_time = 1;
                        }
                        Serial.print("Count :  ");
                        Serial.println(Count_time);
@@ -438,8 +450,8 @@ void loop() {
                  delay(1000);
               }
               
-              /****************************************** End Check Time Out  push bottles 60 seconds  ******************************************/ 
-              int ST_Gencode = digitalRead(Bt_Pin);
+              /****************************************** End Check Time Out  push bottles 30 seconds  ******************************************/ 
+//              int ST_Gencode = digitalRead(Bt_Pin);
               if (ST_Gencode) {
                     Insert_Data();
                     beep(500);
@@ -555,58 +567,17 @@ void Ready_ToPush() {
 }
 
 void Auto_ToPush() {
-  
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("  Auto Confirm  ");
-  lcd.noDisplay();
-  delay(200);
-      lcd.setCursor(0, 1);
-      lcd.print(">>              ");
-      lcd.display();
-      delay(200);
-      lcd.noDisplay();
-      delay(200);
-      lcd.setCursor(0, 1);
-      lcd.print("  >>            ");
-      lcd.display();
-      delay(200);
-      lcd.noDisplay();
-      delay(200);
-      lcd.setCursor(0, 1);
-      lcd.print("    >>          ");
-      lcd.display();
-      delay(200);
-      lcd.noDisplay();
-      delay(200);
-      lcd.setCursor(0, 1);
-      lcd.print("      >>        ");
-      lcd.display();
-      delay(200);
-      lcd.noDisplay();
-      delay(200);
-      lcd.setCursor(0, 1);
-      lcd.print("        >>      ");
-      lcd.display();
-      delay(200);
-      lcd.noDisplay();
-      delay(200);
-      lcd.setCursor(0, 1);
-      lcd.print("          >>    ");
-      lcd.display();
-      delay(200);
-      lcd.noDisplay();
-      delay(200);
-      lcd.setCursor(0, 1);
-      lcd.print("            >>  ");
-      lcd.display();
-      delay(200);
-      lcd.noDisplay();
-      delay(300);
-      lcd.setCursor(0, 1);
-      lcd.print("              >>");
-  lcd.display();
-  delay(200);
+  for(int i =0;i < 16; i+2){
+    lcd.noDisplay();
+    delay(200);
+        lcd.setCursor(i, 1);
+        lcd.print(">>");  
+    lcd.display();
+    delay(200);
+  }
   
 }
 
@@ -623,54 +594,14 @@ void ConnectWiFi() {
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("   connecting   ");
-  lcd.noDisplay();
-  delay(200);
-      lcd.setCursor(0, 1);
-      lcd.print(">>              ");
-      lcd.display();
-      delay(200);
-      lcd.noDisplay();
-      delay(200);
-      lcd.setCursor(0, 1);
-      lcd.print("  >>            ");
-      lcd.display();
-      delay(200);
-      lcd.noDisplay();
-      delay(200);
-      lcd.setCursor(0, 1);
-      lcd.print("    >>          ");
-      lcd.display();
-      delay(200);
-      lcd.noDisplay();
-      delay(200);
-      lcd.setCursor(0, 1);
-      lcd.print("      >>        ");
-      lcd.display();
-      delay(200);
-      lcd.noDisplay();
-      delay(200);
-      lcd.setCursor(0, 1);
-      lcd.print("        >>      ");
-      lcd.display();
-      delay(200);
-      lcd.noDisplay();
-      delay(200);
-      lcd.setCursor(0, 1);
-      lcd.print("          >>    ");
-      lcd.display();
-      delay(200);
-      lcd.noDisplay();
-      delay(200);
-      lcd.setCursor(0, 1);
-      lcd.print("            >>  ");
-      lcd.display();
-      delay(200);
-      lcd.noDisplay();
-      delay(300);
-      lcd.setCursor(0, 1);
-      lcd.print("              >>");
-  lcd.display();
-  delay(200);
+  for(int i =0;i < 16; i+2){
+    lcd.noDisplay();
+    delay(200);
+        lcd.setCursor(i, 1);
+        lcd.print(">>");
+    lcd.display();
+    delay(200);
+  }
 }
 
 String Time_Stamp() {
